@@ -20,7 +20,7 @@ struct RoundTableView: View {
 
 struct Table: View {
     @State
-    private var people: [String] = []
+    private var _people: [Person] = []
     
     private let colors: [String] = [
         "#D1C6DF", "#B2A8D5", "#FADBC7", "#475164", "#FFA7A7",
@@ -33,7 +33,7 @@ struct Table: View {
     var body: some View {
         let diameter: CGFloat = 250
         let radius: CGFloat = diameter / 2
-        let space = 2 * CGFloat.pi / CGFloat(people.count)
+        let space = 2 * CGFloat.pi / CGFloat(_people.count)
         let randStart = CGFloat.random(in: 0 ... 2 * CGFloat.pi)
         
         ZStack {
@@ -41,12 +41,31 @@ struct Table: View {
                 .fill(Color(hex: "#ccd5ae"))
                 .frame(width: diameter, height: diameter)
                 .onTapGesture {
-                    people.append("Rey")
+                    let newPerson = Person(name: "rey", size: 30, color: colors.randomElement())
+                    _people.append(newPerson)
                 }
-            ForEach(Array(people.enumerated()), id: \.offset) { i, person in
-                Person(name: person, size: 30, color: colors.randomElement())
-                    .offset(x: (radius + 30 / 2) * cos(randStart + space * CGFloat(i)),
-                            y: (radius + 30 / 2) * sin(randStart + space * CGFloat(i)))
+            
+            ForEach(Array(_people.enumerated()), id: \.offset) { i, person in
+                let offSet = radius + person.size / 2
+                let angle  = randStart + space * CGFloat(i)
+                let xCoord = offSet * cos(angle)
+                let yCoord = offSet * sin(angle)
+                ZStack {
+                    person
+                        .offset(x: xCoord, y: yCoord)
+                        .overlay(
+                            GeometryReader { geom in
+                                Color
+                                    .clear
+                                    .preference(key: PersonPreferenceKey.self, value: geom.frame(in: .global).origin)
+                            }
+                                .offset(x: xCoord, y: yCoord)
+                        )
+                }
+                .onPreferenceChange(PersonPreferenceKey.self) { point in
+                    person.setCoord(coord: point)
+                }
+                
             }
         }
     }
@@ -54,16 +73,33 @@ struct Table: View {
 }
 
 struct Person: View {
+    @State
+    private var _coord: CGPoint?
     var name: String
     var size: CGFloat // circle radius for now
-    @State
     var color: String? // hex string
+        
+    init(name: String, size: CGFloat, color: String? = nil) {
+        self.name = name
+        self.size = size
+        self.color = color
+    }
+    
     var body: some View {
         Circle()
             .fill(Color(hex: color!))
             .frame(width: size, height: size)
     }
+    
+    func setCoord(coord: CGPoint) {
+        self._coord = coord
+    }
+    
+    func getCoordinates() -> CGPoint {
+        return _coord ?? .zero
+    }
 }
+
 #Preview {
     RoundTableView()
 }
