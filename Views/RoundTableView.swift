@@ -7,10 +7,15 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 struct RoundTableView: View {
     var body: some View {
+        let stopWatch = StopWatch()
+//        let _ = stopWatch.startClock()
         VStack {
+                stopWatch
+                    .offset(x: 0, y: -150)
             Table()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -30,6 +35,7 @@ struct Table: View {
         "#D9CCEA", "#F7C67A", "#AEC8EF", "#F9E2D2", "#B9BBC2",
         "#D7C9E5", "#FFAB90", "#B3E1C2", "#E5D6ED", "#FAD9A9"
     ]
+    
     var body: some View {
         let diameter: CGFloat = 250
         let radius: CGFloat = diameter / 2
@@ -97,6 +103,55 @@ struct Person: View {
     
     func getCoordinates() -> CGPoint {
         return _coord ?? .zero
+    }
+}
+
+struct StopWatch: View {
+    @State private var _currTimeStr: String = "00 : 00"
+    @State private var _currTime: Date = Date.now
+    private var _timer: Publishers.Autoconnect<Timer.TimerPublisher>? = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let _dateFormater: DateFormatter = DateFormatter()
+    @State private var _status = false
+    @State private var _startTime: Date = .now
+    
+    init() {
+        _dateFormater.dateFormat = "mm : ss"
+    }
+    
+    var body: some View {
+        if _timer != nil {
+            Text(_currTimeStr)
+                .font(.largeTitle)
+                .onReceive(_timer!, perform: { newTime in
+                    _currTime = newTime
+//                    _currTimeStr = _dateFormater.string(from: _currTime)
+                    let duration = Int(_currTime.timeIntervalSince(_startTime))
+                    let sec = duration % 60
+                    let min = duration / 60
+                    _currTimeStr = String(format: "%02d : %02d", min, sec)
+                })
+        } else {
+            Text(_currTimeStr)
+                .font(.largeTitle)
+        }
+            
+    }
+    
+    func startClock() {
+        _status = true
+        _startTime = _currTime
+    }
+    
+    func stopClock() {
+        _status = false
+    }
+    
+    func calculateDuration(time: Date) {
+        
+    }
+    
+    func isRunning() -> Bool {
+        return _status
     }
 }
 
