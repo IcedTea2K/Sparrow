@@ -65,7 +65,7 @@ class Clock: ObservableObject {
         return _currTimeStr
     }
     
-    public func isRunng() -> Bool {
+    public func isRunning() -> Bool {
         return _status
     }
     

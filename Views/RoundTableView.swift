@@ -13,10 +13,13 @@ struct RoundTableView: View {
     var body: some View {
         let clock = Clock()
         VStack {
-                StopWatch()
-                    .offset(x: 0, y: -150)
-                    .environmentObject(clock)
+            StopWatch()
+                .offset(x: 0, y: -120)
+                .environmentObject(clock)
             Table()
+                .environmentObject(clock)
+            ToggleDiscussButton()
+                .offset(x: 0, y: 100)
                 .environmentObject(clock)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -53,11 +56,11 @@ struct Table: View {
                 .onTapGesture {
                     let newPerson = Person(name: "rey", size: 30, color: _colors.randomElement())
                     _people.append(newPerson)
-                    if !_clock.isRunng() {
-                        _clock.startClock()
-                    } else {
-                        _clock.stopClock()
-                    }
+//                    if !_clock.isRunng() {
+//                        _clock.startClock()
+//                    } else {
+//                        _clock.stopClock()
+//                    }
                 }
             
             ForEach(Array(_people.enumerated()), id: \.offset) { i, person in
@@ -121,8 +124,61 @@ struct StopWatch: View {
     var body: some View {
         Text(clock.getCurrTime())
             .font(.largeTitle)
-            .foregroundStyle(.black)
+            .foregroundStyle(Color(hex: "#8f8b8b"))
     }
+}
+
+struct ToggleDiscussButton: View {
+    @State private var _isDiscussing: Bool = false
+    @EnvironmentObject private var _clock: Clock
+    
+    var body: some View {
+        _isDiscussing ?
+        _CustomButton(label: "Discussing...", action: _handleStopDiscussing,
+                      textColor: "#ffffff", bgColor: "#D1BF90") :
+        _CustomButton(label: "Start", action: _handleStartDiscussing,
+                      textColor: "#ffffff", bgColor: "#B6A780")
+    }
+    
+    private func _handleStopDiscussing() {
+        if (!_clock.isRunning()) {
+            return
+        }
+        
+        _isDiscussing = false
+        _clock.stopClock()
+    }
+    
+    private func _handleStartDiscussing() {
+        if (_clock.isRunning()) {
+            return
+        }
+        
+        _isDiscussing = true
+        _clock.startClock()
+    }
+    
+    private struct _CustomButton: View {
+        var label: String
+        var action: () -> Void
+        var textColor: String // hex string
+        var bgColor: String // hex string
+        
+        var body: some View {
+            ZStack {
+                RoundedRectangle(cornerRadius: 13)
+                    .fill(Color(hex: bgColor))
+                    .frame(width: 150, height: 50)
+                Text(label)
+                    .foregroundStyle(Color(hex: textColor))
+                
+            }
+            .onTapGesture {
+                action()
+            }
+        }
+    }
+    
 }
 
 #Preview {
